@@ -1031,9 +1031,6 @@ void CBudgetManager::NewBlock()
         SubmitFinalBudget();
     }
 
-    //check if the results are able to be paid out
-    LogPrint("masternode","::NewBlock - PAYOUT BET RESULTS KICKING OFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"); 
-    LogPrintf("masternode","::NewBlock - PAYOUT BET RESULTS KICKING OFF !!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
     // PayoutResults()
 
     //this function should be called 1/14 blocks, allowing up to 100 votes per day on all proposals
