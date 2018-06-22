@@ -19,6 +19,7 @@
 #include "masternode-budget.h"
 #include "masternode-payments.h"
 #include "masternodeman.h"
+#include "miner.h"
 #include "merkleblock.h"
 #include "net.h"
 #include "obfuscation.h"
@@ -3250,15 +3251,44 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     //PoW phase redistributed fees to miner. PoS stage destroys fees.
     CAmount nExpectedMint = GetBlockValue(pindex->pprev->nHeight);
+    CAmount nMNBetReward = 0;
     if (block.IsProofOfWork())
         nExpectedMint += nFees;
 
+
+    int triggerBetPayouts = 0;
+    if (Params().NetworkID() == CBaseChainParams::MAIN) {
+        // trigger once a day mainnet.
+        triggerBetPayouts = 1440;
+    }
+    else {
+        // Trigger every ten blocks testnet.
+        triggerBetPayouts = 10;
+    }
+
+    // Trigger the bet payout verification.
+    if( pindex->nHeight % triggerBetPayouts == 0 ){
+
+        std::vector<CTxOut> vexpectedPayouts = GetBetPayouts();
+        nExpectedMint += GetBlockPayouts(vexpectedPayouts, nMNBetReward);
+        nExpectedMint += nMNBetReward;
+
+        for( unsigned int l = 0; l < vexpectedPayouts.size(); l++ ){
+            LogPrintf( "EXPECTED: %s \n", vexpectedPayouts[l].ToString().c_str() );
+        }
+
+        LogPrintf("Total Amount to Payout: %li \n", nExpectedMint  );
+        vexpectedPayouts.clear();
+    }
+
     if (!IsBlockValueValid(block, nExpectedMint, pindex->nMint)) {
+        LogPrintf( "ConnectBlock() : reward pays too much ( limit=%li)", nExpectedMint);
+
         return state.DoS(100,
             error("ConnectBlock() : reward pays too much (actual=%s vs limit=%s)",
                 FormatMoney(pindex->nMint), FormatMoney(nExpectedMint)),
             REJECT_INVALID, "bad-cb-amount");
-    }
+        }
 
     // zerocoin accumulator: if a new accumulator checkpoint was generated, check that it is the correct value
     if (!fVerifyingBlocks && pindex->nHeight >= Params().Zerocoin_StartHeight() && pindex->nHeight % 10 == 0) {
@@ -4157,13 +4187,14 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool f
             REJECT_INVALID, "block-version");
 
         // WagerrTor - disable reject block as our blocks are in version 4 since block 1
-        /* this check can be cleaned up (**TODO** after test)
-        /*
-    } else {
-        if (block.nVersion >= Params().Zerocoin_HeaderVersion())
-            return state.DoS(50, error("CheckBlockHeader() : block version must be below 4 before ZerocoinStartHeight"),
-            REJECT_INVALID, "block-version");
-        */
+        //this check can be cleaned up (**TODO** after test)
+
+    //}
+    //else {
+    //   if (block.nVersion >= Params().Zerocoin_HeaderVersion()){
+    //        return state.DoS(50, error("CheckBlockHeader() : block version must be below 4 before ZerocoinStartHeight"),
+    //        REJECT_INVALID, "block-version");
+    //    }
     }
 
     return true;
