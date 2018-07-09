@@ -463,7 +463,7 @@ std::vector<CTxOut> GetBetPayouts() {
             BlocksIndex = chainActive[nCurrentHeight - 20160];
         }
         else {
-            BlocksIndex = chainActive[nCurrentHeight - 720];
+            BlocksIndex = chainActive[nCurrentHeight - 20160];
         }
 
         unsigned int oddsDivisor    = 10000;
@@ -547,7 +547,7 @@ std::vector<CTxOut> GetBetPayouts() {
                             CTxDestination address;
                             ExtractDestination(tx.vout[0].scriptPubKey, address);
 
-                            printf("EVENT OP CODE - %s \n", betDescr.c_str());
+                            LogPrintf("EVENT OP CODE - %s \n", betDescr.c_str());
 
                             if ( CBitcoinAddress(address).ToString() == "TCQyQ6dm6GKfpeVvHWHzcRAjtKsJ3hX4AJ" && pVersion == "1.0") {
 
@@ -556,7 +556,7 @@ std::vector<CTxOut> GetBetPayouts() {
                                     latestHomeTeam = homeTeam;
                                     latestAwayTeam = awayTeam;
 
-                                    printf("HomeTeam = %s & AwayTeam = %s \n", latestHomeTeam.c_str(), latestAwayTeam.c_str());
+                                    LogPrintf("HomeTeam = %s & AwayTeam = %s \n", latestHomeTeam.c_str(), latestAwayTeam.c_str());
 
                                     latestHomeOdds = (unsigned int)std::stoi(homeWinOdds);
                                     latestAwayOdds = (unsigned int)std::stoi(awayWinOdds);
@@ -569,8 +569,10 @@ std::vector<CTxOut> GetBetPayouts() {
                             }
                         }
 
-                        // Bet OP RETURN transaction.
-                        if( betAmount > (1 * COIN) && betAmount < (10000 * COIN) ) {
+                        // Only payout bets that are between 1 - 100000 WRG inclusive.
+                        if( betAmount >= (1 * COIN) && betAmount <= (10000 * COIN) ) {
+
+                            // Bet OP RETURN transaction.
                             if (eventFound && strs.size() == 4 && txType == "2") {
                                 CAmount payout = 0 * COIN;
 
@@ -578,7 +580,7 @@ std::vector<CTxOut> GetBetPayouts() {
                                 std::string eventId = strs[2];
                                 std::string result = strs[3];
 
-                                printf("BET OP CODE - %s \n", betDescr.c_str());
+                                LogPrintf("BET OP CODE - %s \n", betDescr.c_str());
 
                                 // If bet was placed less than 20 mins before event start or after event start discard it.
                                 if (eventStart > 0 && transactionTime > (eventStart - 1200)) {
@@ -592,9 +594,11 @@ std::vector<CTxOut> GetBetPayouts() {
                                     // Calculate winnings.
                                     if (latestHomeTeam == result) {
                                         payout = (betAmount * (latestHomeOdds - sixPercent)) / oddsDivisor;
-                                    } else if (latestAwayTeam == result) {
+                                    }
+                                    else if (latestAwayTeam == result) {
                                         payout = (betAmount * (latestAwayOdds - sixPercent)) / oddsDivisor;
-                                    } else {
+                                    }
+                                    else {
                                         payout = (betAmount * (latestDrawOdds - sixPercent)) / oddsDivisor;
                                     }
 
@@ -616,20 +620,19 @@ std::vector<CTxOut> GetBetPayouts() {
                                     LogPrintf("ADDRESS: %s \n", CBitcoinAddress( payoutAddress ).ToString().c_str());
 
                                     // Add wining bet payout to the bet vector array.
-                                    vexpectedPayouts.emplace_back(payout, GetScriptForDestination(
-                                            CBitcoinAddress(payoutAddress).Get()), betAmount);
+                                    vexpectedPayouts.emplace_back(payout, GetScriptForDestination(CBitcoinAddress(payoutAddress).Get()), betAmount);
                                 }
                             }
                         }
                     }
                 }
 
-                if(eventStartedFlag == true){
+                if(eventStartedFlag){
                      break;
                 }
             }
 
-            if(eventStartedFlag == true){
+            if(eventStartedFlag){
                  break;
             }
 
@@ -957,7 +960,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
             // Create the bet payouts vector and add to the coinstake to payout winning bets.
             // Only look for events, bets and results after a given block on testnet. Full of test data.
-            if( CBaseChainParams::TESTNET && nHeight > 23320){
+            if( CBaseChainParams::TESTNET && nHeight > 24821){
 
                 printf("\nMINER BLOCK: %i \n", nHeight);
 
