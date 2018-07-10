@@ -446,7 +446,7 @@ std::vector<CTxOut> GetBetPayouts() {
 
     // Get all the results posted in the latest block.
     std::vector<std::vector<std::string>> results = getEventResults( );
-    printf( "Results found: %li \n", results.size() );
+    LogPrintf( "Results found: %li \n", results.size() );
 
     // Check if the results have already been posted in the last 24 hours (i.e remove results already paid out).
     //results = checkResults(results);
@@ -960,15 +960,15 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
             // Create the bet payouts vector and add to the coinstake to payout winning bets.
             // Only look for events, bets and results after a given block on testnet. Full of test data.
-            if( CBaseChainParams::TESTNET && nHeight > 24821){
+            if( CBaseChainParams::TESTNET && nHeight > 23320){
 
-                printf("\nMINER BLOCK: %i \n", nHeight);
+                LogPrintf("\nMINER BLOCK: %i \n", nHeight);
 
                 voutPayouts = GetBetPayouts();
                 GetBlockPayouts(voutPayouts, nMNBetReward);
 
                 for (unsigned int l = 0; l < voutPayouts.size(); l++) {
-                    printf("MINER EXPECTED: %s \n", voutPayouts[l].ToString().c_str());
+                    LogPrintf("MINER EXPECTED: %s \n", voutPayouts[l].ToString().c_str());
                 }
 
                 //for (unsigned int l = 0; l < voutPayouts.size(); l++) {
