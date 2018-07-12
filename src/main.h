@@ -470,7 +470,7 @@ bool DisconnectBlocksAndReprocess(int blocks);
 bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pindex, CCoinsViewCache& coins, bool fJustCheck, bool fAlreadyChecked = false);
 
 /** Validating the block using the payout vector. **/
-bool IsBlockPayoutsValid( std::vector<CTxOut> vExpectedPayouts, const CBlock& block );
+bool IsBlockPayoutsValid( std::vector<CTxOut> vExpectedPayouts, int nHeight );
 
 /** Context-independent validity checks */
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, bool fCheckPOW = true);
