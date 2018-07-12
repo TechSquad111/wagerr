@@ -570,7 +570,7 @@ std::vector<CTxOut> GetBetPayouts() {
                         }
 
                         // Only payout bets that are between 1 - 100000 WRG inclusive.
-                        if( betAmount >= (1 * COIN) && betAmount <= (10000 * COIN) ) {
+                        if( betAmount >= (50 * COIN) && betAmount <= (10000 * COIN) ) {
 
                             // Bet OP RETURN transaction.
                             if (eventFound && strs.size() == 4 && txType == "2") {
@@ -960,7 +960,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
             // Create the bet payouts vector and add to the coinstake to payout winning bets.
             // Only look for events, bets and results after a given block on testnet. Full of test data.
-            if( CBaseChainParams::TESTNET && nHeight > 23320){
+            if( CBaseChainParams::TESTNET && nHeight > 20000) {
 
                 LogPrintf("\nMINER BLOCK: %i \n", nHeight);
 
