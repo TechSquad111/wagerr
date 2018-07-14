@@ -2177,7 +2177,7 @@ int64_t GetBlockPayouts( std::vector<CTxOut>& vexpectedPayouts){
         CAmount betValue = vexpectedPayouts[i].nBetValue;
         CAmount payValue = vexpectedPayouts[i].nValue;
     
-        printf( "Bet Amount: %li     Pay Amount %li: ", betValue, payValue );
+        //printf( "Bet Amount: %li     Pay Amount %li: ", betValue, payValue );
         
         profitAcc += payValue - betValue; 
     }
