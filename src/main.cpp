@@ -3295,7 +3295,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // Only look for events, bets and results after a given block on testnet. Full of test data.
     std::vector<CTxOut> vExpectedPayouts;
 
-    if (CBaseChainParams::TESTNET && pindex->nHeight > 21730) {
+    if (CBaseChainParams::TESTNET && pindex->nHeight > 21850) {
 
 
         printf("\nMAIN BLOCK: %i \n", (pindex->nHeight));

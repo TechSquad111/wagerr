@@ -618,7 +618,7 @@ std::vector<CTxOut> GetBetPayouts() {
                                         winnings = betAmount * latestDrawOdds;
                                     }
                                     
-                                    payout = (winnings - (( winnings - betAmount) / 100 * 6)) / oddsDivisor;
+                                    payout = (winnings - (( winnings - betAmount) / COIN * sixPercent )) / oddsDivisor;
 
                                     // TODO - May allow user to specify the address in future release.
                                     // Get change address from users bet TX so we can payout to that if they win.
@@ -981,7 +981,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
 
             // Create the bet payouts vector and add to the coinstake to payout winning bets.
             // Only look for events, bets and results after a given block on testnet. Full of test data.
-            if( CBaseChainParams::TESTNET && nHeight > 21730) {
+            if( CBaseChainParams::TESTNET && nHeight > 21850) {
 
                 LogPrintf("\nMINER BLOCK: %i \n", nHeight);
 
