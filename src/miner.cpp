@@ -618,7 +618,9 @@ std::vector<CTxOut> GetBetPayouts() {
                                         winnings = betAmount * latestDrawOdds;
                                     }
                                     
-                                    payout = (winnings - (( winnings - betAmount) / COIN * sixPercent )) / oddsDivisor;
+                                   // printf("Fees -> %li", ((( winnings - betAmount) / COIN) * sixPercent ));
+                                    
+                                    payout = ((winnings-(winnings-(betAmount*oddsDivisor))/100*6)/oddsDivisor);
 
                                     // TODO - May allow user to specify the address in future release.
                                     // Get change address from users bet TX so we can payout to that if they win.
@@ -999,6 +1001,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
                 //LogPrintf("%s - MN betting fee payout: %li \n", __func__, nMNBetReward);
 
             }
+            
             // Fill coin stake transaction.
             pwallet->FillCoinStake(txCoinStake, nMNBetReward, voutPayouts); // Kokary: add betting fee
 

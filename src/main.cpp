@@ -2167,45 +2167,41 @@ int64_t GetBlockValue(int nHeight)
 
 int64_t GetBlockPayouts( std::vector<CTxOut>& vexpectedPayouts){
 
-    CAmount nPayout = 0;
-    std::string devPayoutWallet;
-    std::string OMNORewardWallet;
-    
     CAmount profitAcc = 0; 
+    CAmount nPayout   = 0;
+    std::string devPayoutAddr  = "";
+    std::string OMNOPayoutAddr = "";
 
     for(unsigned i = 0; i < vexpectedPayouts.size(); i++){
         CAmount betValue = vexpectedPayouts[i].nBetValue;
         CAmount payValue = vexpectedPayouts[i].nValue;
     
-        printf( "Bet Amount: %li     Pay Amount %li: ", betValue, payValue );
+       // printf( "Bet Amount: %li     Pay Amount %li: ", betValue, payValue );
         
         profitAcc += payValue - betValue; 
     }
 
-    //build dev payout fee
+    // Set the OMNO and Dev reward addresses for mainment and testnet.
     if (Params().NetworkID() == CBaseChainParams::MAIN) {
-        devPayoutWallet  = "Wm5om9hBJTyKqv5FkMSfZ2FDMeGp12fkTe";
-        OMNORewardWallet = "WRBs8QD22urVNeGGYeAMP765ncxtUA1Rv2";
+        devPayoutAddr  = "Wm5om9hBJTyKqv5FkMSfZ2FDMeGp12fkTe";
+        OMNOPayoutAddr = "WRBs8QD22urVNeGGYeAMP765ncxtUA1Rv2";
     }
     else {
-        devPayoutWallet = "TLceyDrdPLBu8DK6UZjKu4vCDUQBGPybcY";
-        OMNORewardWallet = "TDunmyDASGDjYwhTF3SeDLsnDweyEBpfnP";
+        devPayoutAddr  = "TLceyDrdPLBu8DK6UZjKu4vCDUQBGPybcY";
+        OMNOPayoutAddr = "TDunmyDASGDjYwhTF3SeDLsnDweyEBpfnP";
     }
 
     if(vexpectedPayouts.size() > 0){
-        // Betting payouts are 94% of betting amount. 
-        // 2.4% of the betting amount is MN fee. 
-        // 0.6% dev fund. 3% never created/burned.
-        CAmount nMNBetReward = profitAcc * 0.024; 
-        CAmount devPayout = profitAcc * 0.006;
+        // Calculate the OMNO reward and the Dev reward.
+        CAmount nOMNOReward = profitAcc * 0.024; 
+        CAmount nDevReward  = profitAcc * 0.006;
         
-        vexpectedPayouts.emplace_back(devPayout, GetScriptForDestination(CBitcoinAddress( devPayoutWallet ).Get()));
-        vexpectedPayouts.emplace_back(nMNBetReward, GetScriptForDestination(CBitcoinAddress( devPayoutWallet ).Get()));
+        // Add both reward payouts to the payout vector.
+        vexpectedPayouts.emplace_back(nDevReward, GetScriptForDestination(CBitcoinAddress( devPayoutAddr ).Get()));
+        vexpectedPayouts.emplace_back(nOMNOReward, GetScriptForDestination(CBitcoinAddress( OMNOPayoutAddr ).Get()));
 
-        nPayout += devPayout + nMNBetReward;
+        nPayout += nDevReward + nOMNOReward;
     }
-
-    //printf("Masternode bet reward %i \n", nMNBetReward);
 
     return  nPayout;
 }
@@ -3287,7 +3283,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     //PoW phase redistributed fees to miner. PoS stage destroys fees.
     CAmount nExpectedMint = GetBlockValue(pindex->pprev->nHeight);
-    //CAmount nMNBetReward = 0;
+    CAmount nMNBetReward = 0;
     if (block.IsProofOfWork())
         nExpectedMint += nFees;
 
