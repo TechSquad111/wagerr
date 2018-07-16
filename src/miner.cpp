@@ -595,8 +595,6 @@ std::vector<CTxOut> GetBetPayouts() {
                                 std::string eventId = strs[2];
                                 std::string result = strs[3];
 
-                                
-
                                 // If bet was placed less than 20 mins before event start or after event start discard it.
                                 if (eventStart > 0 && transactionTime > (eventStart - 1200)) {
                                     eventStartedFlag = true;

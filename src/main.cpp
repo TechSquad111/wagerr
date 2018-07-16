@@ -2180,7 +2180,8 @@ int64_t GetBlockPayouts( std::vector<CTxOut>& vexpectedPayouts, CAmount& nMNBetR
         //printf( "Bet Amount: %li     Pay Amount %li: ", betValue, payValue );
 
         totalAmountBet += betValue;
-        profitAcc += payValue - betValue; 
+        profitAcc += payValue - betValue;
+        nPayout += payValue;
     }
 
     // Set the OMNO and Dev reward addresses for mainment and testnet.
@@ -2195,15 +2196,15 @@ int64_t GetBlockPayouts( std::vector<CTxOut>& vexpectedPayouts, CAmount& nMNBetR
 
     if(vexpectedPayouts.size() > 0){
         // Calculate the OMNO reward and the Dev reward.
-        CAmount nOMNOReward = profitAcc * 0.024; 
-        CAmount nDevReward  = profitAcc * 0.006;
+        CAmount nOMNOReward = profitAcc / 94 * 100 * 0.024;
+        CAmount nDevReward  = profitAcc / 94 * 100 * 0.006;
 
         // Add both reward payouts to the payout vector.
         vexpectedPayouts.emplace_back(nDevReward, GetScriptForDestination(CBitcoinAddress( devPayoutAddr ).Get()));
         vexpectedPayouts.emplace_back(nOMNOReward, GetScriptForDestination(CBitcoinAddress( OMNOPayoutAddr ).Get()));
 
-        nMNBetReward = totalAmountBet * 0.024;
-        nPayout += nDevReward + nOMNOReward + nMNBetReward;
+        //nMNBetReward = totalAmountBet * 0.024;
+        nPayout += nDevReward + nOMNOReward;
     }
 
     return  nPayout;
