@@ -618,7 +618,7 @@ std::vector<CTxOut> GetBetPayouts() {
                                         winnings = betAmount * latestDrawOdds;
                                     }
                                     
-                                   // printf("Fees -> %li", ((( winnings - betAmount) / COIN) * sixPercent ));
+                                    // printf("Fees -> %li", ((( winnings - betAmount) / COIN) * sixPercent ));
                                     
                                     payout = ((winnings-(winnings-(betAmount*oddsDivisor))/100*6)/oddsDivisor);
 
@@ -988,7 +988,7 @@ CBlockTemplate* CreateNewBlock(const CScript& scriptPubKeyIn, CWallet* pwallet, 
                 LogPrintf("\nMINER BLOCK: %i \n", nHeight);
 
                 voutPayouts = GetBetPayouts();
-                GetBlockPayouts(voutPayouts);
+                GetBlockPayouts(voutPayouts, nMNBetReward);
 
                 for (unsigned int l = 0; l < voutPayouts.size(); l++) {
                     LogPrintf("MINER EXPECTED: %s \n", voutPayouts[l].ToString().c_str());

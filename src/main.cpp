@@ -2165,10 +2165,11 @@ int64_t GetBlockValue(int nHeight)
     return nSubsidy;
 }
 
-int64_t GetBlockPayouts( std::vector<CTxOut>& vexpectedPayouts){
+int64_t GetBlockPayouts( std::vector<CTxOut>& vexpectedPayouts, CAmount& nMNBetReward){
 
     CAmount profitAcc = 0; 
     CAmount nPayout   = 0;
+    CAmount totalAmountBet = 0;
     std::string devPayoutAddr  = "";
     std::string OMNOPayoutAddr = "";
 
@@ -2177,7 +2178,8 @@ int64_t GetBlockPayouts( std::vector<CTxOut>& vexpectedPayouts){
         CAmount payValue = vexpectedPayouts[i].nValue;
     
         //printf( "Bet Amount: %li     Pay Amount %li: ", betValue, payValue );
-        
+
+        totalAmountBet += betValue;
         profitAcc += payValue - betValue; 
     }
 
@@ -2195,12 +2197,13 @@ int64_t GetBlockPayouts( std::vector<CTxOut>& vexpectedPayouts){
         // Calculate the OMNO reward and the Dev reward.
         CAmount nOMNOReward = profitAcc * 0.024; 
         CAmount nDevReward  = profitAcc * 0.006;
-        
+
         // Add both reward payouts to the payout vector.
         vexpectedPayouts.emplace_back(nDevReward, GetScriptForDestination(CBitcoinAddress( devPayoutAddr ).Get()));
         vexpectedPayouts.emplace_back(nOMNOReward, GetScriptForDestination(CBitcoinAddress( OMNOPayoutAddr ).Get()));
 
-        nPayout += nDevReward + nOMNOReward;
+        nMNBetReward = totalAmountBet * 0.024;
+        nPayout += nDevReward + nOMNOReward + nMNBetReward;
     }
 
     return  nPayout;
@@ -3297,7 +3300,8 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         printf("\nMAIN BLOCK: %i \n", (pindex->nHeight));
 
         vExpectedPayouts = GetBetPayouts();
-        nExpectedMint += GetBlockPayouts(vExpectedPayouts);
+        nExpectedMint += GetBlockPayouts(vExpectedPayouts, nMNBetReward );
+        nExpectedMint += nMNBetReward;
 
         for (unsigned int l = 0; l < vExpectedPayouts.size(); l++) {
             printf("MAIN EXPECTED: %s \n", vExpectedPayouts[l].ToString().c_str());
