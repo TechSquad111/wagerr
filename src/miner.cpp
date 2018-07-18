@@ -608,8 +608,8 @@ std::vector<CTxOut> GetBetPayouts( int height ) {
                                     }
                                     
                                     // printf("Fees -> %li", ((( winnings - betAmount) / COIN) * sixPercent ));
-                                    
-                                    payout = ( winnings - ( winnings - ( betAmount * oddsDivisor) ) / COIN * sixPercent ) / oddsDivisor;
+
+                                    payout = ((winnings-(winnings-(betAmount*oddsDivisor))/100*6)/oddsDivisor);
 
                                     // TODO - May allow user to specify the address in future release.
                                     // Get change address from users bet TX so we can payout to that if they win.
