@@ -65,7 +65,7 @@ UniValue listevents(const UniValue& params, bool fHelp)
     UniValue ret(UniValue::VARR);
     
     // Set the Oracle wallet address. 
-    std:string OracleWalletAddr = "";
+    std::string OracleWalletAddr = "";
     if (Params().NetworkID() == CBaseChainParams::MAIN) {
         OracleWalletAddr = "WdoAnFfB59B2ka69vcxhsQokwufuKzV7Ty";
     }
@@ -214,25 +214,25 @@ UniValue listbets(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() > 4)
         throw runtime_error(
-            "listtransactions ( \"account\" count from includeWatchonly)\n"
-            "\nReturns up to 'count' most recent transactions skipping the first 'from' transactions for account 'account'.\n"
-            "\nArguments:\n"
-            "1. \"account\"    (string, optional) The account name. If not included, it will list all transactions for all accounts.\n"
-            "                                     If \"\" is set, it will list transactions for the default account.\n"
-            "2. count          (numeric, optional, default=10) The number of transactions to return\n"
-            "3. from           (numeric, optional, default=0) The number of transactions to skip\n"
-            "4. includeWatchonly (bool, optional, default=false) Include transactions to watchonly addresses (see 'importaddress')\n"
+            "listbets\n"
+            "\nReturns up to 'count' most recent bets skipping the first 'from' bets for account 'account'.\n"
+
+            "1. \"account\" (string, optional) The account name. If not included, it will list all bets for all accounts.\n"
+            "2. count (numeric, optional, default=10) The number of bets to return\n"
+            "3. from (numeric, optional, default=0) The number of bets to skip\n"
+            "4. includeWatchonly (bool, optional, default=false) Include bets to watchonly addresses (see 'importaddress')\n"
+
             "\nResult:\n"
             "[\n"
             "  {\n"
-            "    \"event-id\":\"accountname\",       (string) The ID of the event being bet on.\n"
-            "    \"team-to-win\":\"wagerraddress\",  (string) The team to win.\n"
-            "    \"amount\": x.xxx,                  (numeric) The amount bet in WGR.\n"
+            "    \"tx-id\" : \"bab9f9528fe0fef552f2c9bedf7b09e3646767f0bd280e12c06baa57fe6d2dca\", (string) The TX ID of the placed bet on chain.\n"
+            "    \"event-id\" : \"#123\", (string) The event ID the bet was placed on.\n"
+            "    \"team-to-win\" : \"RUS\", (string) The team or person to win.\n"
+            "    \"amount\" : x.xxx, (numeric) The amount bet in WGR.\n"
             "  }\n"
             "]\n"
 
-            "\nExamples:\n"
-            "\nList the most recent 10 bets in the systems\n" +
+            "\nExamples:\n" +
             HelpExampleCli("listbets", ""));
 
     string strAccount = "*";
@@ -637,32 +637,25 @@ UniValue placebet(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() < 3 || params.size() > 5)
         throw runtime_error(
-            "placebet \"event-id\" \"team\" amount ( \"comment\" \"comment-to\" )\n"
-            "\n WARNING!!! - Betting closes 20 minutes before event start time. Any bets placed after this time will be \n"
-            "invalid and will not be paid out! \n"
-            "\nPlace an amount as a bet on an event. The amount is rounded to the nearest 0.00000001\n" +
-            HelpRequiringPassphrase() +
-            "\nArguments:\n"
-            "1. \"event-id\"    (string, required) The event to bet on (Must be 4 characters in length e.g. \"#000\").\n"
-            "2. \"team\"        (string, required) The team to win.(Must be 3 character team abbreviation e.g for Russia: \"RUS\". Or for a draw: \"DRW\" ) \n"
-            "3. \"amount\"      (numeric, required) The amount in wgr to send. eg 0.1\n"
-            "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
-            "                             This is not part of the transaction, just kept in your wallet.\n"
-            "4. \"comment-to\"  (string, optional) A comment to store the name of the person or organization \n"
-            "                             to which you're sending the transaction. This is not part of the \n"
-            "                             transaction, just kept in your wallet.\n"
-            "\nResult:\n"
-            "\"transactionid\"  (string) The transaction id.\n"
-            "\nExamples:\n" +
-            HelpExampleCli("placebet", "\"#000\" \"RUS\" 0.1 \"donation\" \"seans outpost\"") +
-            HelpExampleRpc("placebet", "\"#000\", \"RUS\", 0.1, \"donation\", \"seans outpost\""));
+                "placebet \"event-id\" \"winner\" \"amount\"\n"
+                "\nWARNING!!! - Betting closes 20 minutes before event start time. Any bets placed after this time will be invalid and will not be paid out! \n"
+                "\nMinimum bet = 50 WGR Maximum bet = 10,000 WGR (multiple bets allowed)\n" +
+                HelpRequiringPassphrase() + "\n"
+                "\nArguments:\n"
+                "1. \"event-id\" (string, required) The event to bet on (Must be 4 characters in length e.g. \"#000\").\n"
+                "2. \"winner\" (string, required) The team or person to win.(Must match abbreviation or spelling as shown by listevents e.g for Russia: \"RUS\". Or for a draw: \"DRW\" ) \n"
+                "\nResult:\n"
+                "\"transactionid\" (string) The transaction id.\n"
+                "\nExamples:\n" +
+                HelpExampleCli("placebet", "\"#064\" \"FRA\" 50 ") +
+                HelpExampleCli("placebet", "\"WBA2\", \"Paziwapazi\", 10000 "));
 
     // Amount
     CAmount nAmount = AmountFromValue(params[2]);
 
     // Validate bet amount so its between 1 - 10000 WGR inclusive.
     if( nAmount < (50 * COIN ) || nAmount > (10000 * COIN)){
-        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: Incorrect bet amount. Please ensure your bet is beteen 1 - 10000 WGR inclusive.");
+        throw JSONRPCError(RPC_BET_DETAILS_ERROR, "Error: Incorrect bet amount. Please ensure your bet is between 50 - 10000 WGR inclusive.");
     }
 
     // Wallet comments
