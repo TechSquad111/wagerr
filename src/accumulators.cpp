@@ -223,7 +223,7 @@ bool InitializeAccumulators(const int nHeight, int& nHeightCheckpoint, Accumulat
     if (nCheckpointPrev == 0)
         mapAccumulators.Reset();
     else if (!mapAccumulators.Load(nCheckpointPrev))
-        return error("%s: failed to reset to previous checkpoint", __func__);
+        mapAccumulators.Reset();
 
     nHeightCheckpoint = nHeight;
     return true;
@@ -232,7 +232,7 @@ bool InitializeAccumulators(const int nHeight, int& nHeightCheckpoint, Accumulat
 //Get checkpoint value for a specific block height
 bool CalculateAccumulatorCheckpoint(int nHeight, uint256& nCheckpoint, AccumulatorMap& mapAccumulators)
 {
-    if (nHeight < Params().Zerocoin_Block_V2_Start()) {
+    if (nHeight < Params().Zerocoin_StartHeight()) {
         nCheckpoint = 0;
         return true;
     }
@@ -250,11 +250,20 @@ bool CalculateAccumulatorCheckpoint(int nHeight, uint256& nCheckpoint, Accumulat
         return error("%s: failed to initialize accumulators", __func__);
 
     //Whether this should filter out invalid/fraudulent outpoints
-    bool fFilterInvalid = nHeight >= Params().Zerocoin_Block_RecalculateAccumulators();
+    bool fFilterInvalid = false;//nHeight >= Params().Zerocoin_Block_RecalculateAccumulators();
 
     //Accumulate all coins over the last ten blocks that havent been accumulated (height - 20 through height - 11)
     int nTotalMintsFound = 0;
-    CBlockIndex *pindex = chainActive[nHeightCheckpoint - 20];
+
+    CBlockIndex *pindex;
+    if (nHeight > Params().Zerocoin_Block_V2_Start()){
+        pindex = chainActive[nHeightCheckpoint - 20];
+    } else if (nHeight == 1400){
+        pindex = chainActive[10];
+    } else {
+        nCheckpoint = 0;
+        return true;
+    }
 
     while (pindex->nHeight < nHeight - 10) {
         // checking whether we should stop this process due to a shutdown request
@@ -262,7 +271,7 @@ bool CalculateAccumulatorCheckpoint(int nHeight, uint256& nCheckpoint, Accumulat
             return false;
 
         //make sure this block is eligible for accumulation
-        if (pindex->nHeight < Params().Zerocoin_StartHeight()) {
+        if (pindex->nHeight < 10) {
             pindex = chainActive[pindex->nHeight + 1];
             continue;
         }
@@ -306,7 +315,34 @@ bool ValidateAccumulatorCheckpoint(const CBlock& block, CBlockIndex* pindex, Acc
 {
     //V1 accumulators are completely phased out by the time this code hits the public and begins generating new checkpoints
     //It is VERY IMPORTANT that when this is being run and height < v2_start, then zWGR need to be disabled at the same time!!
-    if (pindex->nHeight < Params().Zerocoin_Block_V2_Start() || fVerifyingBlocks)
+
+    if (pindex->nHeight >= Params().Zerocoin_StartHeight()){
+        uint256 nCheckpointCalculated = 0;
+
+        if (!CalculateAccumulatorCheckpoint(pindex->nHeight, nCheckpointCalculated, mapAccumulators))
+            return error("%s : failed to calculate accumulator checkpoint", __func__);
+
+        LogPrintf("%s: MapAccumulators.GetValue(): \nZQ_ONE:\n[%s] \n\n[%s] \n\n[%s]\n", __func__, mapAccumulators.GetValue(ZQ_ONE).GetHex(), mapAccumulators.GetValue(ZQ_ONE).ToString(), mapAccumulators.GetValue(ZQ_ONE).getuint256().GetHex());
+        LogPrintf("\n"
+"            \"  {\\n\"\n" 
+"            \"    \\\"height\\\": %d,\\n\"\n"
+"            \"    \\\"1\\\": \\\"%s\\\",\\n\"\n"
+"            \"    \\\"5\\\": \\\"%s\\\",\\n\"\n"
+"            \"    \\\"10\\\": \\\"%s\\\",\\n\"\n"
+"            \"    \\\"50\\\": \\\"%s\\\",\\n\"\n"
+"            \"    \\\"100\\\": \\\"%s\\\",\\n\"\n"
+"            \"    \\\"500\\\": \\\"%s\\\",\\n\"\n"
+"            \"    \\\"1000\\\": \\\"%s\\\",\\n\"\n"
+"            \"    \\\"5000\\\": \\\"%s\\\"\\n\"\n"
+"            \"  },\\n\"\n" 
+        "\n",pindex->nHeight, 
+            mapAccumulators.GetValue(ZQ_ONE).getuint256().GetHex(), mapAccumulators.GetValue(ZQ_FIVE).getuint256().GetHex(),
+            mapAccumulators.GetValue(ZQ_TEN).getuint256().GetHex(), mapAccumulators.GetValue(ZQ_FIFTY).getuint256().GetHex(),
+            mapAccumulators.GetValue(ZQ_ONE_HUNDRED).getuint256().GetHex(), mapAccumulators.GetValue(ZQ_FIVE_HUNDRED).getuint256().GetHex(),
+            mapAccumulators.GetValue(ZQ_ONE_THOUSAND).getuint256().GetHex(), mapAccumulators.GetValue(ZQ_FIVE_THOUSAND).getuint256().GetHex());
+    }
+
+    if (pindex->nHeight < Params().Zerocoin_Block_V2_Start())// || fVerifyingBlocks)
         return true;
 
     if (pindex->nHeight % 10 == 0) {

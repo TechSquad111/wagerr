@@ -271,13 +271,13 @@ public:
         nMasternodeCountDrift = 4;
         nModifierUpdateBlock = 1; //approx Mon, 17 Apr 2017 04:00:00 GMT
         nMaxMoneyOut = 398360470 * COIN;
-        nZerocoinStartHeight = 350;
+        nZerocoinStartHeight = 1400;
         nZerocoinStartTime = 1518696183; // GMT: Thursday, 15. February 2018 12:03:03
         nBlockEnforceSerialRange = 1; //Enforce serial range starting this block
-        nBlockRecalculateAccumulators = 1400; //Trigger a recalculation of accumulators
+        nBlockRecalculateAccumulators = 99999999; //Trigger a recalculation of accumulators
         nBlockFirstFraudulent = 99999999; //First block that bad serials emerged (currently we do not have any) *** TODO ***
-        nBlockLastGoodCheckpoint = 1398; //Last valid accumulator checkpoint (currently we do not have any) *** TODO ***
-        nBlockEnforceInvalidUTXO = 1600; //Start enforcing the invalid UTXO's
+        nBlockLastGoodCheckpoint = 99999999; //Last valid accumulator checkpoint (currently we do not have any) *** TODO ***
+        nBlockEnforceInvalidUTXO = 99999999; //Start enforcing the invalid UTXO's
         nInvalidAmountFiltered = 0; //Amount of invalid coins filtered through exchanges, that should be considered valid
         nBlockZerocoinV2 = 99999999; //The block that zerocoin v2 becomes active
         nEnforceNewSporkKey = 1521604800; //!> Sporks signed after Wednesday, March 21, 2018 4:00:00 AM GMT must use the new spork key
