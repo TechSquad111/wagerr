@@ -3862,3 +3862,125 @@ UniValue searchdzwgr(const UniValue& params, bool fHelp)
     //todo: better response
     return "done";
 }
+
+UniValue sendmasternodeowners(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() < 2 || params.size() > 4)
+        throw runtime_error(
+            "sendmasternodeowners \"fromaccount\" \"amount\" ( minconf \"comment\" )\n"
+            "\nSend amount to all masternode owners. Amount is a double-precision floating point number." +
+            HelpRequiringPassphrase() + "\n"
+
+            "\nArguments:\n"
+            "1. \"fromaccount\"         (string, required) The account to send the funds from, can be \"\" for the default account\n"
+            "2. \"amount\"             (string, required) The amount to be sent\n"
+            "3. minconf                 (numeric, optional, default=6) Only use the balance confirmed at least this many times.\n"
+            "4. \"comment\"             (string, optional) A comment\n"
+
+            "\nResult:\n"
+            "\"transactionid\"          (string) The transaction id for the send. Only 1 transaction is created regardless of \n"
+            "                                    the number of addresses.\n"
+
+            "\nExamples:\n"
+            "\nSend amount to masternode owners:\n" +
+            HelpExampleCli("sendmasternodeowners", "\"bets20180730\" \"4.721\"") +
+            "\nSend amount to masternode owners setting the confirmation and comment:\n" +
+            HelpExampleCli("sendmasternodeowners", "\"bets20180730\" \"4.721\" 6 \"testing\"") +
+            "\nAs a json rpc call\n" +
+            HelpExampleRpc("sendmasternodeowners", "\"bets20180730\", \"4.721\", 6, \"testing\""));
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    string strAccount = AccountFromValue(params[0]);
+    CAmount nAmount = AmountFromValue(params[1]);
+
+    /*
+     * First implementation: assume all tx.outs fit in 1 tx
+     * Second implementation: take 2 vouts, with dev fund and burn as the 2 change addresses
+     */
+
+    UniValue paramsListmasternodes(UniValue::VARR);
+
+    string vStr("ENABLED");
+    paramsListmasternodes.push_back(vStr);
+
+    UniValue UVmasternodelist = listmasternodes(paramsListmasternodes, false);
+
+    int nMinDepth = 6;
+    if (params.size() > 2)
+        nMinDepth = params[2].get_int();
+
+    CWalletTx wtx;
+    wtx.strFromAccount = strAccount;
+    if (params.size() > 3 && !params[3].isNull() && !params[3].get_str().empty())
+        wtx.mapValue["comment"] = params[3].get_str();
+
+    set<CBitcoinAddress> setAddress;
+    vector<pair<CScript, CAmount> > vecSend;
+
+    CAmount totalAmount = 0;
+
+    BOOST_FOREACH(const UniValue& mnToPay, UVmasternodelist.getValues()) {
+        string mnToPayAddress = mnToPay.getValues()[5].getValStr();
+        CBitcoinAddress address(mnToPayAddress);
+        if (!address.IsValid())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Wagerr address: ")+mnToPayAddress);
+
+        if (setAddress.count(address))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+mnToPayAddress);
+        setAddress.insert(address);
+
+        CScript scriptPubKey = GetScriptForDestination(address.Get());
+        totalAmount += nAmount;
+
+        vecSend.push_back(make_pair(scriptPubKey, nAmount));
+    }
+
+/*
+    // Generate 2500 addresses to test if enough masternodes can be paid
+
+    if (!pwalletMain->IsLocked())
+        pwalletMain->TopUpKeyPool();
+    for (int x = 0; x < 2500; x++){
+
+        // Generate a new key that is added to wallet
+        CPubKey newKey;
+        if (!pwalletMain->GetKeyFromPool(newKey))
+            throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+        CKeyID keyID = newKey.GetID();
+
+        pwalletMain->SetAddressBook(keyID, strAccount, "receive");
+
+        CBitcoinAddress address(keyID);
+        if (!address.IsValid())
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid Wagerr address."));
+
+        if (setAddress.count(address))
+            throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address."));
+        setAddress.insert(address);
+
+        CScript scriptPubKey = GetScriptForDestination(address.Get());
+        totalAmount += nAmount;
+
+        vecSend.push_back(make_pair(scriptPubKey, nAmount));
+    }
+*/
+    EnsureWalletIsUnlocked();
+
+    // Check funds
+    CAmount nBalance = GetAccountBalance(strAccount, nMinDepth, ISMINE_SPENDABLE);
+    if (totalAmount > nBalance)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Account has insufficient funds");
+
+    // Send
+    CReserveKey keyChange(pwalletMain);
+    CAmount nFeeRequired = 0;
+    string strFailReason;
+    bool fCreated = pwalletMain->CreateTransaction(vecSend, wtx, keyChange, nFeeRequired, strFailReason);
+    if (!fCreated)
+        throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, strFailReason);
+    if (!pwalletMain->CommitTransaction(wtx, keyChange))
+        throw JSONRPCError(RPC_WALLET_ERROR, "Transaction commit failed");
+
+    return wtx.GetHash().GetHex();
+}
