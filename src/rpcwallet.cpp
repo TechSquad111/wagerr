@@ -3873,7 +3873,7 @@ UniValue sendmasternodeowners(const UniValue& params, bool fHelp)
 
             "\nArguments:\n"
             "1. \"fromaccount\"         (string, required) The account to send the funds from, can be \"\" for the default account\n"
-            "2. \"amount\"             (string, required) The amount to be sent\n"
+            "2. \"amount\"             (string, required) The amount to be distributed over all masternodes\n"
             "3. minconf                 (numeric, optional, default=6) Only use the balance confirmed at least this many times.\n"
             "4. \"comment\"             (string, optional) A comment\n"
 
@@ -3892,7 +3892,7 @@ UniValue sendmasternodeowners(const UniValue& params, bool fHelp)
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     string strAccount = AccountFromValue(params[0]);
-    CAmount nAmount = AmountFromValue(params[1]);
+    CAmount nToDistributeAmount = AmountFromValue(params[1]);
 
     /*
      * First implementation: assume all tx.outs fit in 1 tx
@@ -3918,6 +3918,7 @@ UniValue sendmasternodeowners(const UniValue& params, bool fHelp)
     set<CBitcoinAddress> setAddress;
     vector<pair<CScript, CAmount> > vecSend;
 
+    CAmount nAmount = nToDistributeAmount / UVmasternodelist.size();
     CAmount totalAmount = 0;
 
     BOOST_FOREACH(const UniValue& mnToPay, UVmasternodelist.getValues()) {
