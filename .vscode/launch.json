@@ -3,6 +3,26 @@
         "version": "0.2.0",
         "configurations": [
             {
+                "name": "Wagerr QT testnet 3.0.1",
+                "type": "cppdbg",
+                "request": "launch",
+                "program": "${workspaceFolder}/src/qt/wagerr-qt",
+                "args": ["--datadir=/var/storage/wagerr/.wagerr-testnet-3.0.1",
+                         "-debug=1", "-testnet=1", "-devnet=0", "-staking=0",
+                         "-resync=1"],
+                "cwd": "${workspaceFolder}",
+    
+                "externalConsole": false,
+                "MIMode": "gdb",
+                "setupCommands": [
+                    {
+                        "description": "Enable pretty-printing for gdb",
+                        "text": "-enable-pretty-printing",
+                        "ignoreFailures": true
+                    }
+                ]
+            },
+            {
                 "name": "bitcoin-util test (verbos) (internal terminal)",
                 "type": "python",
                 "request": "launch",
